@@ -4,17 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Price Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #28a745;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
 </head>
 <body>
     <h1>Check Stock Price</h1>
     <form method="POST">
         <label for="stock_symbol">Enter Stock Symbol:</label>
-        <input type="text" id="stock_symbol" name="stock_symbol" placeholder="e.g., SBIN">
+        <input type="text" id="stock_symbol" name="stock_symbol" placeholder="e.g., SBIN" required>
         <button type="submit">Get Price</button>
     </form>
 
     {% if lp_value is not none %}
         <h2>Last Price (LP): {{ lp_value }}</h2>
+    {% endif %}
+
+    {% if holdings %}
+        <h2>Your Current Holdings</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Quantity</th>
+                    <th>Cost Price</th>
+                    <th>Last Traded Price (LTP)</th>
+                    <th>Market Value</th>
+                    <th>P&L</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for holding in holdings %}
+                <tr>
+                    <td>{{ holding.symbol }}</td>
+                    <td>{{ holding.quantity }}</td>
+                    <td>{{ holding.costPrice }}</td>
+                    <td>{{ holding.ltp }}</td>
+                    <td>{{ holding.marketVal }}</td>
+                    <td>{{ holding.pl }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No holdings found or error fetching holdings.</p>
     {% endif %}
 </body>
 </html>
