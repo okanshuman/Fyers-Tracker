@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Price Checker</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -47,7 +50,7 @@
 
     {% if holdings %}
         <h2>Your Current Holdings</h2>
-        <table>
+        <table id="holdingsTable">
             <thead>
                 <tr>
                     <th>Symbol</th>
@@ -56,6 +59,7 @@
                     <th>Last Traded Price (LTP)</th>
                     <th>Market Value</th>
                     <th>P&L</th>
+                    <th>% Change</th> <!-- New column for percentage change -->
                 </tr>
             </thead>
             <tbody>
@@ -67,12 +71,22 @@
                     <td>{{ holding.ltp }}</td>
                     <td>{{ holding.marketVal }}</td>
                     <td>{{ holding.pl }}</td>
+                    <td>{{ holding.percentChange }}%</td> <!-- Display percentage change -->
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <p>No holdings found or error fetching holdings.</p>
+        <p>No valid holdings found.</p>
     {% endif %}
+
+    <script>
+    $(document).ready(function() {
+        $('#holdingsTable').DataTable({
+            "pageLength": 100 // Set default number of rows to display
+        });
+    });
+    </script>
+
 </body>
 </html>
