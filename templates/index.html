@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Checker</title>
+</head>
+<body>
+    <h1>Check Stock Price</h1>
+    <form method="POST">
+        <label for="stock_symbol">Enter Stock Symbol:</label>
+        <input type="text" id="stock_symbol" name="stock_symbol" placeholder="e.g., SBIN">
+        <button type="submit">Get Price</button>
+    </form>
+
+    {% if lp_value is not none %}
+        <h2>Last Price (LP): {{ lp_value }}</h2>
+    {% endif %}
+</body>
+</html>
