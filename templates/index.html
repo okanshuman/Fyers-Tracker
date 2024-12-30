@@ -39,10 +39,6 @@
 <body>
     <h1>Check Stock Price</h1>
 
-    {% if lp_value is not none %}
-        <h2>Last Price (LP): {{ lp_value }}</h2>
-    {% endif %}
-
     {% if holdings %}
         <h2>Your Current Holdings</h2>
         <table id="holdingsTable">
@@ -79,33 +75,7 @@
               "pageLength": 100 // Set default number of rows to display
           });
 
-          // Function to update holdings every 5 minutes (300000 milliseconds)
-          function updateHoldings() {
-              $.getJSON('/update_holdings', function(data) {
-                  // Clear existing table rows
-                  var tableBody = $('#holdingsTable tbody');
-                  tableBody.empty();
-
-                  // Populate table with new data
-                  $.each(data, function(index, holding) {
-                      var row = `<tr>
-                          <td>${holding.symbol}</td>
-                          <td>${holding.quantity}</td>
-                          <td>${holding.costPrice}</td>
-                          <td>${holding.ltp}</td>
-                          <td>${holding.pl}</td>
-                          <td>${holding.percentChange}%</td>
-                      </tr>`;
-                      tableBody.append(row);
-                  });
-
-                  // Reinitialize DataTable after updating content
-                  $('#holdingsTable').DataTable().draw();
-              });
-          }
-
-          // Set interval to update every 5 minutes
-          setInterval(updateHoldings, 60000); // Update every 5 minutes (300000 ms)
+          // No need for AJAX updates since we're handling updates in the backend.
       });
     </script>
 

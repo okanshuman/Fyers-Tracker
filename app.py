@@ -1,10 +1,13 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, jsonify
+from flask_apscheduler import APScheduler
 import Login as fyers  # Assuming Login is your Fyers API module
 
 app = Flask(__name__)
+scheduler = APScheduler()
 
-# Global set to keep track of processed symbols
-processed_symbols = set()
+# Global variable to store holdings data and processed symbols
+holdings_data = []
+processed_symbols = set()  # To track symbols for which orders have been placed
 
 
 def round_to_two_decimal(value):
@@ -30,23 +33,9 @@ def calculate_percentage_change(cost_price, ltp):
     return round_to_two_decimal(((ltp - cost_price) / cost_price) * 100)
 
 
-@app.route("/", methods=["GET", "POST"])
-def index():
-    lp_value = None  # Initialize the lp value
-    holdings_data = None  # Initialize holdings data
-
-    if request.method == "POST":
-        stock_symbol = request.form.get("stock_symbol")
-        stock_symbol = stock_symbol.upper()
-        if stock_symbol:
-            data = {"symbols": f"NSE:{stock_symbol}-EQ"}
-            try:
-                response = fyers.fyers_active.quotes(data)
-                lp_value = round_to_two_decimal(response['d'][0]['v']['lp'])  # Extract and round lp value
-            except Exception as e:
-                lp_value = f"Error fetching data: {str(e)}"
-
-    # Fetch current holdings
+def fetch_holdings():
+    """Fetch current holdings and update global holdings_data."""
+    global holdings_data
     try:
         holdings_response = fyers.fyers_active.holdings()
         holdings_data = holdings_response['holdings']  # Extracting only holdings
@@ -70,66 +59,58 @@ def index():
         # Sort holdings by percentage change in increasing order
         filtered_holdings.sort(key=lambda x: x['percentChange'])
 
-        holdings_data = filtered_holdings
-
         # Place orders for symbols with % change greater than -5%
         for holding in filtered_holdings:
-            if holding['percentChange'] > -5:  # Adjusted condition to >-5%
-                order_symbol = f"NSE:{holding['symbol']}-EQ"  # Format as required
+            if holding['percentChange'] > -5 and holding[
+                'symbol'] not in processed_symbols:  # Check if order has already been placed
+                order_data = {
+                    "symbol": f"NSE:{holding['symbol']}-EQ",  # Format as required
+                    "qty": holding['quantity'],  # Use quantity from holdings
+                    "type": 2,
+                    "side": -1,
+                    "productType": "CNC",
+                    "limitPrice": 0,
+                    "stopPrice": 0,
+                    "validity": "DAY",
+                    "disclosedQty": 0,
+                    "offlineOrder": False,
+                    "orderTag": "tag1"
+                }
+                response = fyers.fyers_active.place_order(data=order_data)
+                print(f"Order placed for {holding['symbol']}: {response}")
 
-                # Check if this symbol has already been processed
-                if holding['symbol'] not in processed_symbols:
-                    order_data = {
-                        "symbol": order_symbol,
-                        "qty": holding['quantity'],  # Use quantity from holdings
-                        "type": 2,
-                        "side": -1,
-                        "productType": "CNC",
-                        "limitPrice": 0,
-                        "stopPrice": 0,
-                        "validity": "DAY",
-                        "disclosedQty": 0,
-                        "offlineOrder": False,
-                        "orderTag": "tag1"
-                    }
-                    response = fyers.fyers_active.place_order(data=order_data)
-                    print(f"Order placed for {holding['symbol']}: {response}")
+                # Add symbol to processed set to prevent re-ordering
+                processed_symbols.add(holding['symbol'])
 
-                    # Add this symbol to the processed list
-                    processed_symbols.add(holding['symbol'])
+        holdings_data = filtered_holdings
 
     except Exception as e:
-        holdings_data = f"Error fetching holdings: {str(e)}"
+        print(f"Error fetching holdings: {str(e)}")
 
-    return render_template("index.html", lp_value=lp_value, holdings=holdings_data)
+
+@app.route("/", methods=["GET"])
+def index():
+    """Render the index page with current holdings."""
+    return render_template("index.html", holdings=holdings_data)
 
 
 @app.route("/update_holdings", methods=["GET"])
 def update_holdings():
-    """Fetch updated holdings and return as JSON."""
-    try:
-        holdings_response = fyers.fyers_active.holdings()
-        holdings_data = holdings_response['holdings']
+    """Return current holdings data as JSON."""
+    return jsonify(holdings_data)  # Return current holdings data as JSON
 
-        # Process and clean relevant fields
-        filtered_holdings = []
-        for holding in holdings_data:
-            if is_valid_symbol(holding['symbol']):
-                holding['symbol'] = clean_symbol(holding['symbol'])
-                holding['costPrice'] = round_to_two_decimal(holding['costPrice'])
-                holding['ltp'] = round_to_two_decimal(holding['ltp'])
-                holding['pl'] = round_to_two_decimal(holding['pl'])
-                holding['percentChange'] = calculate_percentage_change(holding['costPrice'], holding['ltp'])
 
-                filtered_holdings.append(holding)
-
-        filtered_holdings.sort(key=lambda x: x['percentChange'])  # Sort by percent change
-
-        return jsonify(filtered_holdings)  # Return as JSON response
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+@scheduler.task('interval', id='update_holdings_task', seconds=15)
+def scheduled_update():
+    print("Scheduled update task triggered.")
+    fetch_holdings()
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    scheduler.init_app(app)
+
+    # Start the scheduler only if it hasn't been started already
+    scheduler.start()
+
+    fetch_holdings()  # Initial fetch of holdings when starting the app
+    app.run(debug=False, port=5001)  # Set debug=True for development purposes
