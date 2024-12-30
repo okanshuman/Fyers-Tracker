@@ -14,13 +14,23 @@
             margin: 0;
             padding: 20px;
         }
-        h1 {
-            color: #333;
+        .total-pl {
+            font-size: 20px;
+            position: absolute; /* Positioning it absolutely */
+            top: 20px; /* Distance from the top */
+            right: 20px; /* Distance from the right */
+            margin-bottom: 20px;
+        }
+        .profit {
+            color: #28a745; /* Green color for profit */
+        }
+        .loss {
+            color: #dc3545; /* Red color for loss */
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 60px; /* Add margin to prevent overlap with total P&L */
         }
         th, td {
             border: 1px solid #ddd;
@@ -37,15 +47,11 @@
     </style>
 </head>
 <body>
-    <h1>Check Stock Price</h1>
-    <form method="POST">
-        <label for="stock_symbol">Enter Stock Symbol:</label>
-        <input type="text" id="stock_symbol" name="stock_symbol" placeholder="e.g., SBIN" required>
-        <button type="submit">Get Price</button>
-    </form>
 
-    {% if lp_value is not none %}
-        <h2>Last Price (LP): {{ lp_value }}</h2>
+    {% if total_pl is not none %}
+      <div class="total-pl {% if total_pl < 0 %}loss{% else %}profit{% endif %}">
+          Total Profit/Loss: {{ total_pl }}
+      </div>
     {% endif %}
 
     {% if holdings %}
@@ -57,9 +63,8 @@
                     <th>Quantity</th>
                     <th>Cost Price</th>
                     <th>Last Traded Price (LTP)</th>
-                    <th>Market Value</th>
                     <th>P&L</th>
-                    <th>% Change</th> <!-- New column for percentage change -->
+                    <th>% Change</th>
                 </tr>
             </thead>
             <tbody>
@@ -69,7 +74,6 @@
                     <td>{{ holding.quantity }}</td>
                     <td>{{ holding.costPrice }}</td>
                     <td>{{ holding.ltp }}</td>
-                    <td>{{ holding.marketVal }}</td>
                     <td>{{ holding.pl }}</td>
                     <td>{{ holding.percentChange }}%</td> <!-- Display percentage change -->
                 </tr>
@@ -81,11 +85,11 @@
     {% endif %}
 
     <script>
-    $(document).ready(function() {
-        $('#holdingsTable').DataTable({
-            "pageLength": 100 // Set default number of rows to display
-        });
-    });
+      $(document).ready(function() {
+          $('#holdingsTable').DataTable({
+              "pageLength": 100 // Set default number of rows to display
+          });
+      });
     </script>
 
 </body>

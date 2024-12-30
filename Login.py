@@ -5,7 +5,7 @@ from fyers_apiv3 import fyersModel
 
 grant_type = "authorization_code"  ## The grant_type always has to be "authorization_code"
 response_type = "code"  ## The response_type always has to be "code"
-state = "sample"  ##  The state field here acts as a session manager. you will be sent with the state field after successfull generation of auth_code
+state = "sample"
 
 appSession = fyersModel.SessionModel(client_id=cr.client_id, redirect_uri=cr.redirect_uri, response_type=response_type,
                                      state=state, secret_key=cr.secret_key, grant_type=grant_type)
@@ -15,9 +15,6 @@ from time import sleep
 import os
 import pyotp
 import requests
-import json
-import math
-import pytz
 from urllib.parse import parse_qs, urlparse
 import warnings
 import pandas as pd
@@ -67,12 +64,10 @@ url = res3['Url']
 print(url)
 parsed = urlparse(url)
 auth_code = parse_qs(parsed.query)['auth_code'][0]
-auth_code
+#auth_code
 
 grant_type = "authorization_code"
-
 response_type = "code"
-
 session = fyersModel.SessionModel(
     client_id=cr.client_id,
     secret_key=cr.secret_key,
@@ -82,9 +77,7 @@ session = fyersModel.SessionModel(
 )
 
 session.set_token(auth_code)
-
 response = session.generate_token()
-
 #print(response)
 
 access_token = response['access_token']
