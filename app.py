@@ -92,4 +92,4 @@ if __name__ == "__main__":
     scheduler.init_app(app)
     scheduler.start()
     fetch_holdings()  # Initial fetch of holdings when starting the app
-    app.run(debug=False, port=5001)  # Set debug=True for development purposes
+    app.run(debug=False,host='0.0.0.0', port=5001)  # Set debug=True for development purposes
