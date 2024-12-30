@@ -17,6 +17,11 @@
         h1 {
             color: #333;
         }
+        .total-pl {
+            font-size: 20px;
+            color: #28a745; /* Green color for profit */
+            margin-bottom: 20px;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -38,6 +43,10 @@
 </head>
 <body>
     <h1>Check Stock Price</h1>
+
+    {% if total_pl is not none %}
+      <div class="total-pl">Total Profit/Loss: {{ total_pl }}</div>
+    {% endif %}
 
     {% if holdings %}
         <h2>Your Current Holdings</h2>
@@ -74,8 +83,6 @@
           $('#holdingsTable').DataTable({
               "pageLength": 100 // Set default number of rows to display
           });
-
-          // No need for AJAX updates since we're handling updates in the backend.
       });
     </script>
 

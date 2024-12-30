@@ -1,7 +1,7 @@
 # app.py
 from flask import Flask, render_template, jsonify
 from flask_apscheduler import APScheduler
-import Login as fyers  # Assuming Login is your Fyers API module
+import Login as fyers
 from utils import round_to_two_decimal, is_valid_symbol, clean_symbol, calculate_percentage_change
 
 app = Flask(__name__)
@@ -16,21 +16,26 @@ def fetch_holdings():
     global holdings_data
     try:
         holdings_response = fyers.fyers_active.holdings()
-        holdings_data = holdings_response['holdings']  # Extracting only holdings
+        holdings_data = holdings_response['holdings']
+
+        # Initialize total profit/loss
+        total_pl = 0.0
 
         # Filter, clean, and round relevant fields in the holdings data
         filtered_holdings = []
         for holding in holdings_data:
             if is_valid_symbol(holding['symbol']):
-                holding['symbol'] = clean_symbol(holding['symbol'])  # Clean the symbol
+                holding['symbol'] = clean_symbol(holding['symbol'])
                 holding['costPrice'] = round_to_two_decimal(holding['costPrice'])
                 holding['ltp'] = round_to_two_decimal(holding['ltp'])
                 holding['pl'] = round_to_two_decimal(holding['pl'])
-                holding['marketVal'] = round_to_two_decimal(
-                    holding.get('marketVal', 0))  # Ensure marketVal is rounded too
+                holding['marketVal'] = round_to_two_decimal(holding.get('marketVal', 0))
 
                 # Calculate percentage change and add it to the holding data
                 holding['percentChange'] = calculate_percentage_change(holding['costPrice'], holding['ltp'])
+
+                # Update total profit/loss
+                total_pl += holding['pl']
 
                 filtered_holdings.append(holding)
 
@@ -62,13 +67,18 @@ def fetch_holdings():
 
         holdings_data = filtered_holdings
 
+        return total_pl  # Return total profit/loss
+
     except Exception as e:
         print(f"Error fetching holdings: {str(e)}")
+        return 0.0  # Return zero if there's an error
+
 
 @app.route("/", methods=["GET"])
 def index():
     """Render the index page with current holdings."""
-    return render_template("index.html", holdings=holdings_data)
+    total_pl = fetch_holdings()  # Fetch holdings and get total P&L
+    return render_template("index.html", holdings=holdings_data, total_pl=total_pl)
 
 @app.route("/update_holdings", methods=["GET"])
 def update_holdings():
@@ -77,7 +87,6 @@ def update_holdings():
 
 @scheduler.task('interval', id='update_holdings_task', seconds=15)
 def scheduled_update():
-    #print("scheduled_update triggered")
     fetch_holdings()
 
 if __name__ == "__main__":
