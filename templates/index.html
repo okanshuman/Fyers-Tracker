@@ -19,13 +19,21 @@
         }
         .total-pl {
             font-size: 20px;
-            color: #28a745; /* Green color for profit */
+            position: absolute; /* Positioning it absolutely */
+            top: 20px; /* Distance from the top */
+            right: 20px; /* Distance from the right */
             margin-bottom: 20px;
+        }
+        .profit {
+            color: #28a745; /* Green color for profit */
+        }
+        .loss {
+            color: #dc3545; /* Red color for loss */
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 60px; /* Add margin to prevent overlap with total P&L */
         }
         th, td {
             border: 1px solid #ddd;
@@ -42,10 +50,11 @@
     </style>
 </head>
 <body>
-    <h1>Check Stock Price</h1>
 
     {% if total_pl is not none %}
-      <div class="total-pl">Total Profit/Loss: {{ total_pl }}</div>
+      <div class="total-pl {% if total_pl < 0 %}loss{% else %}profit{% endif %}">
+          Total Profit/Loss: {{ total_pl }}
+      </div>
     {% endif %}
 
     {% if holdings %}
