@@ -67,7 +67,7 @@ def fetch_holdings():
 
         holdings_data = filtered_holdings
 
-        return total_pl  # Return total profit/loss
+        return round_to_two_decimal(total_pl)  # Round the total P&L before returning
 
     except Exception as e:
         print(f"Error fetching holdings: {str(e)}")
