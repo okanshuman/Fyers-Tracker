@@ -73,7 +73,6 @@ def fetch_holdings():
         print(f"Error fetching holdings: {str(e)}")
         return 0.0  # Return zero if there's an error
 
-
 @app.route("/", methods=["GET"])
 def index():
     """Render the index page with current holdings."""
