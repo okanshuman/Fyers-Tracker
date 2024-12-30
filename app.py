@@ -1,3 +1,4 @@
+# app.py
 from flask import Flask, render_template, jsonify
 from flask_apscheduler import APScheduler
 import Login as fyers  # Assuming Login is your Fyers API module
@@ -9,29 +10,24 @@ scheduler = APScheduler()
 holdings_data = []
 processed_symbols = set()  # To track symbols for which orders have been placed
 
-
 def round_to_two_decimal(value):
     """Helper function to round a number to two decimal places."""
     return round(value, 2)
-
 
 def is_valid_symbol(symbol):
     """Check if the symbol is valid (does not contain BEES, ETF, ALPHA, MAFANG, MOREALTY, MOMOMENTUM, or numerics)."""
     return not any(sub in symbol for sub in ["BEES", "ETF", "ALPHA", "MAFANG", "MOREALTY", "MOMOMENTUM"]) and not any(
         char.isdigit() for char in symbol)
 
-
 def clean_symbol(symbol):
     """Remove 'NSE:' prefix and '-EQ' suffix from the symbol."""
     return symbol.replace("NSE:", "").replace("-EQ", "")
-
 
 def calculate_percentage_change(cost_price, ltp):
     """Calculate the percentage change based on cost price and last traded price."""
     if cost_price == 0:
         return 0.0  # Avoid division by zero
     return round_to_two_decimal(((ltp - cost_price) / cost_price) * 100)
-
 
 def fetch_holdings():
     """Fetch current holdings and update global holdings_data."""
@@ -87,30 +83,24 @@ def fetch_holdings():
     except Exception as e:
         print(f"Error fetching holdings: {str(e)}")
 
-
 @app.route("/", methods=["GET"])
 def index():
     """Render the index page with current holdings."""
     return render_template("index.html", holdings=holdings_data)
-
 
 @app.route("/update_holdings", methods=["GET"])
 def update_holdings():
     """Return current holdings data as JSON."""
     return jsonify(holdings_data)  # Return current holdings data as JSON
 
-
 @scheduler.task('interval', id='update_holdings_task', seconds=15)
 def scheduled_update():
-    print("Scheduled update task triggered.")
+    #print("Scheduled update task triggered.")
     fetch_holdings()
 
 
 if __name__ == "__main__":
     scheduler.init_app(app)
-
-    # Start the scheduler only if it hasn't been started already
     scheduler.start()
-
     fetch_holdings()  # Initial fetch of holdings when starting the app
     app.run(debug=False, port=5001)  # Set debug=True for development purposes
