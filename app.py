@@ -2,6 +2,7 @@
 from flask import Flask, render_template, jsonify
 from flask_apscheduler import APScheduler
 import Login as fyers  # Assuming Login is your Fyers API module
+from utils import round_to_two_decimal, is_valid_symbol, clean_symbol, calculate_percentage_change
 
 app = Flask(__name__)
 scheduler = APScheduler()
@@ -9,25 +10,6 @@ scheduler = APScheduler()
 # Global variable to store holdings data and processed symbols
 holdings_data = []
 processed_symbols = set()  # To track symbols for which orders have been placed
-
-def round_to_two_decimal(value):
-    """Helper function to round a number to two decimal places."""
-    return round(value, 2)
-
-def is_valid_symbol(symbol):
-    """Check if the symbol is valid (does not contain BEES, ETF, ALPHA, MAFANG, MOREALTY, MOMOMENTUM, or numerics)."""
-    return not any(sub in symbol for sub in ["BEES", "ETF", "ALPHA", "MAFANG", "MOREALTY", "MOMOMENTUM"]) and not any(
-        char.isdigit() for char in symbol)
-
-def clean_symbol(symbol):
-    """Remove 'NSE:' prefix and '-EQ' suffix from the symbol."""
-    return symbol.replace("NSE:", "").replace("-EQ", "")
-
-def calculate_percentage_change(cost_price, ltp):
-    """Calculate the percentage change based on cost price and last traded price."""
-    if cost_price == 0:
-        return 0.0  # Avoid division by zero
-    return round_to_two_decimal(((ltp - cost_price) / cost_price) * 100)
 
 def fetch_holdings():
     """Fetch current holdings and update global holdings_data."""
@@ -95,9 +77,8 @@ def update_holdings():
 
 @scheduler.task('interval', id='update_holdings_task', seconds=15)
 def scheduled_update():
-    #print("Scheduled update task triggered.")
+    #print("scheduled_update triggered")
     fetch_holdings()
-
 
 if __name__ == "__main__":
     scheduler.init_app(app)
